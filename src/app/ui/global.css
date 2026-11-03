@@ -1,0 +1,33 @@
+/* Removed Tailwind directives due to unknown at-rule error */
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f0f8ff;
+}
+
+.nav-link:hover {
+  color: #ffd700 !important;
+}
+
+.btn-primary {
+  @apply bg-yellow-400 text-blue-900 font-semibold py-2 px-4 rounded hover:bg-yellow-500 transform hover:scale-105 transition-transform;
+}
+
+.btn-success {
+  @apply bg-green-500 text-white font-semibold py-2 px-4 rounded hover:bg-green-600 transform hover:scale-105 transition-transform;
+}
+
+.hero {
+  background: linear-gradient(rgba(0, 74, 173, 0.7), rgba(0, 74, 173, 0.7)), url('/images/hero-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  color: white;
+  padding: 120px 0;
+  text-align: center;
+  animation: fadeIn 2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
