@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { products } from "@/data/products";
+import { useProducts } from "@/context/ProductContext";
 import ProductCard from "./ProductCard";
 import ProductModal from "./ProductModal";
 import { Sparkles, ArrowRight, MessageCircle } from "lucide-react";
@@ -13,7 +13,11 @@ export default function FeaturedProducts() {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Take the 6 featured products requested: Bombil, Prawns, Surmai, Bangda, Mandeli, Kolambi
-  const featuredList = products.slice(0, 6);
+  const { products } = useProducts();
+  const featuredList = (products.some((p) => p.isFeatured)
+    ? products.filter((p) => p.isFeatured)
+    : products
+  ).slice(0, 6);
 
   const customOrderUrl = buildGeneralWhatsAppUrl(
     "Hello! I am looking for a custom assortment of dry fish. Can you assist me?"

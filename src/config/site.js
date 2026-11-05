@@ -15,7 +15,7 @@ export const siteConfig = {
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "917709398119",
   contact: {
     phoneDisplay: "+91 77093 98119",
-    email: "contact@dahanudryfish.com",
+    email: "sailee.tandel123@gmail.com",
     address: "Sea Face Road, Dahanu Beach, Palghar District, Maharashtra 401602",
     hours: "Monday to Sunday: 8:00 AM – 8:00 PM (IST)",
     instagram: "https://instagram.com/dahanudryfish",

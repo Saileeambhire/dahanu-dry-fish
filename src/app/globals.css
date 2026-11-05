@@ -9,6 +9,8 @@
   --cream: #FFFDF8;
   --sand: #F5EBDD;
   --wa-green: #25D366;
+  --font-heading: 'Bricolage Grotesque', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 html {

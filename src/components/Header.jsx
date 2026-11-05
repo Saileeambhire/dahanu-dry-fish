@@ -28,7 +28,7 @@ export default function Header() {
   return (
     <>
       {/* Top Announcement Bar */}
-      <div className="bg-navy-900 text-sand-light text-xs font-medium py-2 px-4 border-b border-ocean/40">
+      {/* <div className="bg-navy-900 text-sand-light text-xs font-medium py-2 px-4 border-b border-ocean/40">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-waGreen animate-pulse"></span>
@@ -41,15 +41,14 @@ export default function Header() {
             </span>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Main Header */}
       <header
-        className={`sticky top-0 z-40 transition-all duration-300 ${
-          isScrolled
-            ? "bg-navy/95 backdrop-blur-md shadow-coastal py-3 border-b border-ocean/30"
-            : "bg-navy py-4 border-b border-ocean/20"
-        }`}
+        className={`sticky top-0 z-40 transition-all duration-300 ${isScrolled
+          ? "bg-navy/95 backdrop-blur-md shadow-coastal py-3 border-b border-ocean/30"
+          : "bg-navy py-4 border-b border-ocean/20"
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
@@ -75,11 +74,10 @@ export default function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-semibold transition-colors duration-200 relative py-1 ${
-                    isActive
-                      ? "text-brandOrange font-bold"
-                      : "text-sand-light hover:text-brandOrange"
-                  }`}
+                  className={`text-sm font-semibold transition-colors duration-200 relative py-1 ${isActive
+                    ? "text-brandOrange font-bold"
+                    : "text-sand-light hover:text-brandOrange"
+                    }`}
                 >
                   {link.label}
                   {isActive && (
@@ -134,11 +132,10 @@ export default function Header() {
                       key={link.href}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-base font-semibold ${
-                        isActive
-                          ? "bg-ocean text-cream"
-                          : "text-sand-light hover:bg-ocean/30 hover:text-cream"
-                      }`}
+                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-base font-semibold ${isActive
+                        ? "bg-ocean text-cream"
+                        : "text-sand-light hover:bg-ocean/30 hover:text-cream"
+                        }`}
                     >
                       <span>{link.label}</span>
                       <ChevronRight className="w-4 h-4 text-sand" />

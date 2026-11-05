@@ -2,7 +2,7 @@
 
 import { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { products, categories } from "@/data/products";
+import { useProducts } from "@/context/ProductContext";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "./ProductModalWrapper";
 import { Search, Filter, Sparkles, MessageCircle, SlidersHorizontal, RotateCcw } from "lucide-react";
@@ -15,6 +15,7 @@ function ShopContent() {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
+  const { products, categories } = useProducts();
   const [modalProduct, setModalProduct] = useState(null);
 
   const filteredProducts = useMemo(() => {

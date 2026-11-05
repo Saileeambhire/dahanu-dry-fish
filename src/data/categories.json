@@ -1,0 +1,28 @@
+[
+  {
+    "id": "all",
+    "name": "All Products",
+    "nameMr": "सर्व उत्पादने"
+  },
+  {
+    "id": "bombil",
+    "name": "Bombil (Bombay Duck)",
+    "nameMr": "सुका बोंबील"
+  },
+  {
+    "id": "prawns",
+    "name": "Prawns & Kolambi",
+    "nameMr": "सुकट आणि कोळंबी"
+  },
+  {
+    "id": "premium",
+    "name": "Surmai & Premium Cuts",
+    "nameMr": "सुरमई आणि प्रीमियम कट्स"
+  },
+  {
+    "id": "daily",
+    "name": "Bangda & Mandeli",
+    "nameMr": "बांगडा आणि मांदेली"
+  }
+]
+
