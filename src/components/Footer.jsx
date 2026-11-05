@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { siteConfig } from "@/config/site";
 import { buildGeneralWhatsAppUrl } from "@/lib/whatsapp";
 import {
@@ -10,7 +11,6 @@ import {
   ShieldCheck,
   Sun,
   Package,
-  Waves,
 } from "lucide-react";
 
 export default function Footer() {
@@ -65,18 +65,24 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 py-12">
           {/* Brand Info */}
           <div className="md:col-span-5 space-y-4">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brandOrange to-ocean flex items-center justify-center text-white">
-                <Waves className="w-6 h-6 text-cream" />
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative w-20 h-20 rounded-full overflow-hidden bg-white p-0.5 border-2 border-brandOrange/40 shadow-md shrink-0 transition-transform group-hover:scale-105">
+                <Image
+                  src="/images/logo.png"
+                  alt="मासे मित्र - Mase Mitra Seafood Logo"
+                  fill
+                  sizes="48px"
+                  className="object-contain"
+                />
               </div>
-              <div>
-                <span className="font-heading text-xl font-bold tracking-tight text-cream">
-                  Dahanu <span className="text-brandOrange">Dry Fish</span>
+              {/* <div>
+                <span className="font-heading text-xl font-bold tracking-tight text-cream block">
+                  मासे मित्र <span className="text-brandOrange">Seafood</span>
                 </span>
                 <span className="text-[11px] text-sand/80 block uppercase tracking-wider">
-                  Coastal Seafood Craft
+                  समुद्राची चव, तुमच्या घरी!
                 </span>
-              </div>
+              </div> */}
             </Link>
             <p className="text-sand/80 text-sm leading-relaxed max-w-sm">
               Bringing the pure, unadulterated maritime traditions of Dahanu to your kitchen.
@@ -118,6 +124,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/admin" className="hover:text-brandOrange transition-colors">
+                  Admin Dashboard
+                </Link>
+              </li>
+              <li>
                 <Link href="/contact" className="hover:text-brandOrange transition-colors">
                   Contact & Ordering FAQ
                 </Link>
@@ -153,7 +164,7 @@ export default function Footer() {
 
         {/* Bottom copyright and WhatsApp Notice */}
         <div className="pt-8 mt-6 border-t border-ocean/30 flex flex-col md:flex-row items-center justify-between text-xs text-sand/60 gap-4">
-          <p>© {new Date().getFullYear()} Dahanu Dry Fish. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} मासे मित्र Seafood (Dahanu Dry Fish). All rights reserved.</p>
           <p className="text-center md:text-right">
             Zero checkout gateways • Orders processed individually on WhatsApp for maximum freshness
           </p>
@@ -162,4 +173,3 @@ export default function Footer() {
     </footer>
   );
 }
-

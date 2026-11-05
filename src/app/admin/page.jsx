@@ -569,14 +569,22 @@ export default function AdminDashboardPage() {
         <div className="max-w-md w-full bg-navy-800/90 rounded-3xl border border-ocean/50 p-8 shadow-2xl backdrop-blur-xl relative z-10 space-y-6">
           {/* Logo & Header */}
           <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brandOrange to-ocean flex items-center justify-center text-white mx-auto shadow-orange-glow mb-4">
-              <Lock className="w-7 h-7 text-white" />
+            <div className="relative w-20 h-20 rounded-full overflow-hidden bg-white p-1 shadow-orange-glow mx-auto mb-3 border-2 border-brandOrange">
+              <Image
+                src="/images/logo.png"
+                alt="मासे मित्र - Mase Mitra Seafood Logo"
+                fill
+                sizes="80px"
+                className="object-contain"
+                priority
+              />
             </div>
+
             <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-cream tracking-tight">
-              Admin Login Portal
+              मासे मित्र <span className="text-brandOrange">Portal</span>
             </h1>
             <p className="text-xs text-sand/70">
-              दहाणू सुकी मासळी • Authorized Store Management Access
+              समुद्राची चव, तुमच्या घरी! • Authorized Store Access
             </p>
           </div>
 
@@ -694,17 +702,26 @@ export default function AdminDashboardPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
+            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-white p-0.5 border border-brandOrange/40 shrink-0 shadow-sm">
+              <Image
+                src="/images/logo.png"
+                alt="मासे मित्र"
+                fill
+                sizes="40px"
+                className="object-contain"
+              />
+            </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-heading text-xl sm:text-2xl font-extrabold text-cream tracking-tight">
-                  Admin <span className="text-brandOrange">Dashboard</span>
+                  मासे मित्र <span className="text-brandOrange">Dashboard</span>
                 </span>
                 <span className="bg-brandOrange/20 border border-brandOrange/40 text-brandOrange text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
                   Logged In
                 </span>
               </div>
               <p className="text-xs text-sand/70">
-                दहाणू सुकी मासळी • Products, Prices & Category Management
+                समुद्राची चव, तुमच्या घरी! • Products, Prices & Category Management
               </p>
             </div>
           </div>

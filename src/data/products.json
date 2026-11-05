@@ -1,5 +1,41 @@
 [
   {
+    "id": "dry-1793871808323",
+    "name": "Tes",
+    "localName": "Test",
+    "nameMr": "Test",
+    "category": "bombil",
+    "image": "https://rxbbthtcfchwtqhwckae.supabase.co/storage/v1/object/public/product-images/zavala-1793871829241.webp",
+    "badge": "Fresh Catch",
+    "shortDescription": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing Library in London, took a 1914 Cicero translation and scrambled it to make dummy text for Letraset's Body Type sheets.",
+    "longDescription": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since 1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing Library in London, took a 1914 Cicero translation and scrambled it to make dummy text for Letraset's Body Type sheets.",
+    "isFeatured": true,
+    "rating": 5,
+    "reviewsCount": 10,
+    "weightOptions": [
+      {
+        "label": "250g",
+        "price": 200
+      },
+      {
+        "label": "500g",
+        "price": 380
+      },
+      {
+        "label": "1kg",
+        "price": 720
+      }
+    ],
+    "highlights": [
+      "Naturally dried on traditional bamboo machans",
+      "Zero chemical preservatives or artificial bleach",
+      "Direct harvest from Dahanu coastline",
+      "Hygienically cleaned and vacuum packed"
+    ],
+    "culinaryUse": "Best for crispy rava fry, coastal thecha, or spicy curry.",
+    "createdAt": "2026-11-05T09:44:00.013343+00:00"
+  },
+  {
     "id": "sukat-red-prawns",
     "name": "Baby Jawla & Red Sukat Prawns",
     "localName": "लाल सुकट / जवळा",

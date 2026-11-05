@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { siteConfig } from "@/config/site";
 import { buildGeneralWhatsAppUrl } from "@/lib/whatsapp";
@@ -52,18 +53,28 @@ export default function Header() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-brandOrange to-ocean flex items-center justify-center text-white shadow-md shadow-brandOrange/20 transition-transform group-hover:scale-105">
-              <Waves className="w-6 h-6 text-cream" />
+          <Link href="/" className="">
+            <div className="relative w-20 h-20 sm:w-13 sm:h-13 rounded-full overflow-hidden bg-white p-0.5 shadow-md shadow-brandOrange/20 border-2 border-brandOrange/40 transition-transform duration-300 group-hover:scale-105 shrink-0">
+              <Image
+                src="/images/logo.png"
+                alt="मासे मित्र - Mase Mitra Seafood Logo"
+                fill
+                sizes="52px"
+                className="object-contain"
+                priority
+              />
             </div>
-            <div>
+
+
+
+            {/* <div>
               <span className="font-heading text-xl sm:text-2xl font-bold tracking-tight text-cream block leading-tight">
-                Dahanu <span className="text-brandOrange">Dry Fish</span>
+                मासे मित्र <span className="text-brandOrange">Seafood</span>
               </span>
               <span className="text-[10px] sm:text-xs text-sand tracking-widest uppercase font-medium block">
-                Authentic Coastal Heritage
+                समुद्राची चव, तुमच्या घरी!
               </span>
-            </div>
+            </div> */}
           </Link>
 
           {/* Desktop Navigation */}
