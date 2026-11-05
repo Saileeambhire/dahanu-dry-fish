@@ -54,6 +54,7 @@ export default function ProductCard({ product, onQuickView }) {
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+            unoptimized={product.image?.startsWith("data:")}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
 

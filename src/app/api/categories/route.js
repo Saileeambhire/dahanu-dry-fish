@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { categories as defaultCategories } from "@/data/products";
+import { isSupabaseConfigured, supabaseAdmin, supabase } from "@/lib/supabase";
+
+export const dynamic = "force-dynamic";
 
 const categoriesFilePath = path.join(process.cwd(), "src", "data", "categories.json");
 
@@ -13,7 +15,7 @@ const fallbackCategories = [
   { id: "daily", name: "Bangda & Mandeli", nameMr: "बांगडा आणि मांदेली" },
 ];
 
-function getStoredCategories() {
+function getStoredCategoriesLocal() {
   try {
     if (fs.existsSync(categoriesFilePath)) {
       const fileData = fs.readFileSync(categoriesFilePath, "utf8");
@@ -25,7 +27,7 @@ function getStoredCategories() {
   return fallbackCategories;
 }
 
-function saveCategories(categoriesList) {
+function saveCategoriesLocal(categoriesList) {
   try {
     fs.writeFileSync(categoriesFilePath, JSON.stringify(categoriesList, null, 2), "utf8");
     return true;
@@ -35,17 +37,64 @@ function saveCategories(categoriesList) {
   }
 }
 
+// Map DB row to category
+function rowToCategory(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    nameMr: row.name_mr || "",
+    icon: row.icon || null,
+  };
+}
+
+// Map Category to DB row
+function categoryToRow(c) {
+  return {
+    id: c.id,
+    name: c.name,
+    name_mr: c.nameMr || "",
+    icon: c.icon || null,
+  };
+}
+
 export async function GET() {
-  const categories = getStoredCategories();
-  return NextResponse.json({ success: true, categories });
+  if (isSupabaseConfigured()) {
+    try {
+      const client = supabaseAdmin || supabase;
+      const { data, error } = await client
+        .from("categories")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const mapped = data.map(rowToCategory);
+        saveCategoriesLocal(mapped);
+        return NextResponse.json({
+          success: true,
+          storage: "supabase",
+          categories: mapped,
+        });
+      }
+    } catch (sbError) {
+      console.warn("Supabase categories fetch failed:", sbError);
+    }
+  }
+
+  const localCategories = getStoredCategoriesLocal();
+  return NextResponse.json({
+    success: true,
+    storage: "local",
+    categories: localCategories,
+  });
 }
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    let currentList = getStoredCategories();
-
     const { action, category, id } = body;
+    const client = isSupabaseConfigured() ? supabaseAdmin || supabase : null;
+
+    let currentList = getStoredCategoriesLocal();
 
     if (action === "add" && category) {
       const slugId =
@@ -56,7 +105,6 @@ export async function POST(request) {
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-|-$/g, "");
 
-      // Check if id already exists
       const exists = currentList.some((c) => c.id === slugId);
       if (exists) {
         return NextResponse.json(
@@ -68,45 +116,65 @@ export async function POST(request) {
       const newCat = {
         id: slugId,
         name: category.name.trim(),
-        nameMr: category.nameMr?.trim() || category.name.trim(),
+        nameMr: category.nameMr?.trim() || "",
+        icon: category.icon || null,
       };
 
       currentList.push(newCat);
+
+      if (client) {
+        await client.from("categories").insert(categoryToRow(newCat));
+      }
     } else if (action === "update" && category && category.id) {
       currentList = currentList.map((c) =>
         c.id === category.id
           ? {
               ...c,
-              name: category.name ? category.name.trim() : c.name,
-              nameMr: category.nameMr ? category.nameMr.trim() : c.nameMr,
+              name: category.name.trim(),
+              nameMr: category.nameMr?.trim() || "",
+              icon: category.icon || c.icon,
             }
           : c
       );
+
+      if (client) {
+        const target = currentList.find((c) => c.id === category.id);
+        if (target) {
+          await client.from("categories").upsert(categoryToRow(target));
+        }
+      }
     } else if (action === "delete" && id) {
       if (id === "all") {
         return NextResponse.json(
-          { success: false, error: "Cannot delete the 'All Products' category" },
+          { success: false, error: "Cannot delete the default 'All' category." },
           { status: 400 }
         );
       }
       currentList = currentList.filter((c) => c.id !== id);
+
+      if (client) {
+        await client.from("categories").delete().eq("id", id);
+      }
     } else if (action === "reset") {
       currentList = fallbackCategories;
+      if (client) {
+        await client.from("categories").upsert(fallbackCategories.map(categoryToRow));
+      }
     }
 
-    const saved = saveCategories(currentList);
+    saveCategoriesLocal(currentList);
 
     return NextResponse.json({
-      success: saved,
+      success: true,
+      storage: client ? "supabase" : "local",
       categories: currentList,
-      message: saved ? "Categories updated successfully" : "Failed to persist categories",
+      message: "Categories updated successfully",
     });
   } catch (error) {
     console.error("API categories error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to process category request" },
+      { success: false, error: error.message || "Failed to process request" },
       { status: 500 }
     );
   }
 }
-

@@ -30,6 +30,13 @@ import {
   Layers,
   CheckCircle2,
   AlertTriangle,
+  UploadCloud,
+  Camera,
+  Loader2,
+  Link as LinkIcon,
+  Database,
+  Server,
+  Cloud,
 } from "lucide-react";
 
 const PRESET_IMAGES = [
@@ -145,6 +152,17 @@ export default function AdminDashboardPage() {
   const [inlinePrices, setInlinePrices] = useState({});
   const [savedStatus, setSavedStatus] = useState({});
 
+  // Image Upload State
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageSourceTab, setImageSourceTab] = useState("upload");
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [directUpdatingId, setDirectUpdatingId] = useState(null);
+
+  // Database & Cloud Storage State
+  const [dbStorageType, setDbStorageType] = useState("local");
+  const [isSyncingToSupabase, setIsSyncingToSupabase] = useState(false);
+  const [showDbModal, setShowDbModal] = useState(false);
+
   // Check auth status on mount
   useEffect(() => {
     async function checkAuth() {
@@ -174,7 +192,20 @@ export default function AdminDashboardPage() {
       }
     }
 
+    async function checkDb() {
+      try {
+        const res = await fetch("/api/products");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.storage) {
+            setDbStorageType(data.storage);
+          }
+        }
+      } catch {}
+    }
+
     checkAuth();
+    checkDb();
   }, []);
 
   const showToast = (msg) => {
@@ -230,6 +261,29 @@ export default function AdminDashboardPage() {
     showToast("Logged out successfully.");
   };
 
+  // Sync to Supabase Database
+  const handleSyncToSupabase = async () => {
+    setIsSyncingToSupabase(true);
+    try {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "sync_to_supabase" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("🚀 " + (data.message || "Data synced to Supabase!"));
+        setDbStorageType("supabase");
+      } else {
+        showToast("⚠️ " + (data.error || "Sync failed. Check Supabase credentials in .env.local"), "error");
+      }
+    } catch {
+      showToast("Sync request failed. Make sure your server is running.", "error");
+    } finally {
+      setIsSyncingToSupabase(false);
+    }
+  };
+
   // Filtered Products
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -261,6 +315,7 @@ export default function AdminDashboardPage() {
       category: defaultCat,
       id: `dry-${Date.now()}`,
     });
+    setImageSourceTab("upload");
     setIsEditing(false);
     setIsFormOpen(true);
   };
@@ -274,8 +329,80 @@ export default function AdminDashboardPage() {
         ? product.highlights.split("\n")
         : [],
     });
+    setImageSourceTab("upload");
     setIsEditing(true);
     setIsFormOpen(true);
+  };
+
+  // Image Upload Handlers
+  const uploadImageFile = async (file) => {
+    if (!file) return null;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("Please choose an image file (JPG, PNG, WEBP, AVIF).", "error");
+      return null;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("Image exceeds 10MB limit. Please upload a smaller file.", "error");
+      return null;
+    }
+
+    const data = new FormData();
+    data.append("file", file);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: data,
+    });
+
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      throw new Error(result.error || "Upload failed");
+    }
+
+    return result.url;
+  };
+
+  const handleModalImageUpload = async (file) => {
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const url = await uploadImageFile(file);
+      if (url) {
+        setFormData((prev) => ({ ...prev, image: url }));
+        showToast("📸 Image uploaded and linked to product!");
+      }
+    } catch (err) {
+      console.error("Image upload error:", err);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setFormData((prev) => ({ ...prev, image: e.target.result }));
+          showToast("Image loaded from device.");
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleDirectProductImageUpload = async (productId, file) => {
+    if (!file) return;
+    setDirectUpdatingId(productId);
+    try {
+      const url = await uploadImageFile(file);
+      if (url) {
+        await updateProduct(productId, { image: url });
+        showToast("📸 Product photo updated successfully!");
+      }
+    } catch (err) {
+      console.error("Direct upload error:", err);
+      showToast("Failed to upload image. Please try again.", "error");
+    } finally {
+      setDirectUpdatingId(null);
+    }
   };
 
   // Weight Option handling inside product modal form
@@ -584,6 +711,26 @@ export default function AdminDashboardPage() {
 
           {/* Navigation & Logout */}
           <div className="flex items-center gap-3 w-full sm:w-auto justify-end flex-wrap">
+            {/* Database & Cloud Storage Status */}
+            <button
+              type="button"
+              onClick={() => setShowDbModal(true)}
+              className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl border transition-colors ${
+                dbStorageType === "supabase"
+                  ? "bg-emerald-950/80 border-emerald-500/50 text-emerald-300 hover:bg-emerald-900"
+                  : "bg-navy-800 border-ocean/40 text-sand hover:text-white hover:bg-navy-700"
+              }`}
+              title="Database & Image Storage Settings"
+            >
+              <Database className="w-3.5 h-3.5 text-brandOrange" />
+              <span>{dbStorageType === "supabase" ? "Supabase Cloud" : "Database"}</span>
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  dbStorageType === "supabase" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
+                }`}
+              />
+            </button>
+
             <Link
               href="/shop"
               target="_blank"
@@ -895,14 +1042,43 @@ export default function AdminDashboardPage() {
                     >
                       {/* Left: Thumbnail & Info */}
                       <div className="flex items-start gap-4 min-w-[280px]">
-                        <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-sand-light border border-sand-dark shrink-0">
+                        <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-sand-light border border-sand-dark shrink-0 group/img shadow-xs">
                           <Image
                             src={p.image}
                             alt={p.name}
                             fill
                             sizes="80px"
-                            className="object-cover"
+                            className="object-cover transition-transform duration-300 group-hover/img:scale-105"
+                            unoptimized={p.image?.startsWith("data:")}
                           />
+                          {/* Quick upload overlay */}
+                          <label
+                            className={`absolute inset-0 bg-navy/70 backdrop-blur-xs flex flex-col items-center justify-center text-white cursor-pointer transition-opacity ${
+                              directUpdatingId === p.id
+                                ? "opacity-100"
+                                : "opacity-0 group-hover/img:opacity-100"
+                            }`}
+                            title="Upload new photo for this product"
+                          >
+                            {directUpdatingId === p.id ? (
+                              <Loader2 className="w-5 h-5 animate-spin text-brandOrange" />
+                            ) : (
+                              <>
+                                <Camera className="w-4 h-4 mb-0.5 text-brandOrange" />
+                                <span className="text-[9px] font-bold uppercase tracking-wider">Change</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={directUpdatingId === p.id}
+                              className="hidden"
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) handleDirectProductImageUpload(p.id, f);
+                              }}
+                            />
+                          </label>
                         </div>
                         <div>
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -1026,6 +1202,138 @@ export default function AdminDashboardPage() {
           </div>
         )}
       </main>
+
+      {/* MODAL 0: DATABASE & STORAGE SETTINGS */}
+      {showDbModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-900/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-cream rounded-3xl border border-sand-dark shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="bg-navy-900 text-cream px-6 py-4 flex items-center justify-between border-b border-ocean/40">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-brandOrange/20 border border-brandOrange/40 flex items-center justify-center text-brandOrange">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-heading text-lg font-bold text-cream">
+                    Database & Cloud Storage
+                  </h3>
+                  <p className="text-[11px] text-sand/70">
+                    PostgreSQL Database & CDN Image Bucket (Supabase)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDbModal(false)}
+                className="p-1.5 rounded-lg text-sand/60 hover:text-white hover:bg-navy-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto space-y-5 text-xs text-navy">
+              {/* Status Banner */}
+              <div
+                className={`p-4 rounded-2xl border flex items-start gap-3 ${
+                  dbStorageType === "supabase"
+                    ? "bg-emerald-50 border-emerald-300 text-emerald-900"
+                    : "bg-amber-50 border-amber-300 text-amber-900"
+                }`}
+              >
+                <div className="mt-0.5">
+                  {dbStorageType === "supabase" ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  ) : (
+                    <AlertTriangle className="w-5 h-5 text-amber-600" />
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <p className="font-bold text-sm">
+                    {dbStorageType === "supabase"
+                      ? "Supabase Cloud Database Active"
+                      : "Local Storage Mode Active"}
+                  </p>
+                  <p className="text-xs leading-relaxed opacity-90">
+                    {dbStorageType === "supabase"
+                      ? "Products, categories, and prices are syncing in real time with Supabase PostgreSQL. Uploaded photos are hosted in the product-images Supabase Storage bucket."
+                      : "Your products and photos are currently stored in local JSON files and local uploads. To connect Supabase, add your credentials in .env.local."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Sync Action */}
+              <div className="p-4 bg-sand/40 rounded-2xl border border-sand-dark space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-navy">Sync Catalog to Database</h4>
+                    <p className="text-[11px] text-navy/60">
+                      Uploads all current products from your store into Supabase PostgreSQL.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isSyncingToSupabase}
+                    onClick={handleSyncToSupabase}
+                    className="inline-flex items-center gap-1.5 bg-brandOrange hover:bg-brandOrange-hover text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-xs transition-all disabled:opacity-50"
+                  >
+                    {isSyncingToSupabase ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Syncing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Cloud className="w-3.5 h-3.5" />
+                        <span>Sync Now</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Step-by-step Setup Guide */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-navy uppercase text-[11px] tracking-wider">
+                  How to configure Supabase (Free):
+                </h4>
+                <ol className="list-decimal list-inside space-y-2 text-[11px] text-navy/80 bg-white p-4 rounded-2xl border border-sand-dark">
+                  <li>
+                    Visit <strong>supabase.com</strong> and create a free project.
+                  </li>
+                  <li>
+                    Go to <strong>Project Settings → API</strong> and copy your Project URL &amp; Anon Key.
+                  </li>
+                  <li>
+                    Paste them into your <code className="bg-sand-light px-1.5 py-0.5 rounded font-mono text-[10px]">.env.local</code> file:
+                    <pre className="mt-1.5 p-2 bg-navy-950 text-sand-light rounded-lg font-mono text-[10px] overflow-x-auto">
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+                    </pre>
+                  </li>
+                  <li>
+                    Open <strong>SQL Editor</strong> in Supabase, paste the contents of <code className="bg-sand-light px-1.5 py-0.5 rounded font-mono text-[10px]">supabase/schema.sql</code>, and click <strong>Run</strong>.
+                  </li>
+                  <li>
+                    Return here and click <strong>&quot;Sync Now&quot;</strong> to migrate all products to the database!
+                  </li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-sand/30 border-t border-sand-dark flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowDbModal(false)}
+                className="bg-navy hover:bg-navy-800 text-cream font-bold text-xs px-5 py-2.5 rounded-xl transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL 1: ADD / EDIT CATEGORY */}
       {isCategoryModalOpen && (
@@ -1280,54 +1588,238 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              {/* Image URL & Quick Preset Picker */}
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-navy uppercase block">
-                  Product Image URL
-                </label>
-                <div className="flex gap-3">
-                  <input
-                    type="url"
-                    required
-                    value={formData.image}
-                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    placeholder="https://..."
-                    className="flex-grow text-xs px-3.5 py-2.5 rounded-xl border border-sand-dark bg-white focus:outline-none focus:border-brandOrange"
-                  />
-                  {formData.image && (
-                    <div className="relative w-11 h-11 rounded-xl overflow-hidden border border-sand-dark shrink-0">
-                      <Image
-                        src={formData.image}
-                        alt="Preview"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
+              {/* Product Image Section: Upload / URL / Presets */}
+              <div className="space-y-3 p-4 bg-sand/30 rounded-2xl border border-sand-dark/70">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-navy uppercase flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-brandOrange" />
+                    Product Image
+                  </label>
+                  {formData.image ? (
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Check className="w-2.5 h-2.5" />
+                      Image Attached
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <AlertCircle className="w-2.5 h-2.5" />
+                      No Image Selected
+                    </span>
                   )}
                 </div>
 
-                {/* Quick Presets */}
-                <div>
-                  <span className="text-[11px] font-bold text-navy/60 block mb-1">
-                    Or select an authentic coastal photo:
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {PRESET_IMAGES.map((img) => (
-                      <button
-                        key={img.name}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, image: img.url })}
-                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all ${
-                          formData.image === img.url
-                            ? "bg-brandOrange text-white border-brandOrange"
-                            : "bg-white text-navy/70 border-sand-dark hover:border-ocean"
+                {/* Source Mode Tabs */}
+                <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-xl border border-sand-dark text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setImageSourceTab("upload")}
+                    className={`py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                      imageSourceTab === "upload"
+                        ? "bg-brandOrange text-white shadow-xs"
+                        : "text-navy/70 hover:text-navy hover:bg-sand-light"
+                    }`}
+                  >
+                    <UploadCloud className="w-3.5 h-3.5" />
+                    <span>Upload File</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageSourceTab("url")}
+                    className={`py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                      imageSourceTab === "url"
+                        ? "bg-brandOrange text-white shadow-xs"
+                        : "text-navy/70 hover:text-navy hover:bg-sand-light"
+                    }`}
+                  >
+                    <LinkIcon className="w-3.5 h-3.5" />
+                    <span>Image URL</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageSourceTab("presets")}
+                    className={`py-1.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                      imageSourceTab === "presets"
+                        ? "bg-brandOrange text-white shadow-xs"
+                        : "text-navy/70 hover:text-navy hover:bg-sand-light"
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Presets</span>
+                  </button>
+                </div>
+
+                {/* TAB 1: UPLOAD FILE */}
+                {imageSourceTab === "upload" && (
+                  <div className="space-y-3">
+                    {formData.image ? (
+                      <div className="relative rounded-2xl overflow-hidden border border-sand-dark bg-white p-3.5 flex items-center gap-4">
+                        <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-sand-light border border-sand-dark shrink-0">
+                          <Image
+                            src={formData.image}
+                            alt="Preview"
+                            fill
+                            className="object-cover"
+                            unoptimized={formData.image?.startsWith("data:")}
+                          />
+                        </div>
+                        <div className="flex-grow min-w-0 space-y-1">
+                          <p className="text-xs font-bold text-navy truncate">
+                            {formData.image.startsWith("/uploads/")
+                              ? formData.image.replace("/uploads/products/", "")
+                              : formData.image.startsWith("data:")
+                              ? "Uploaded local photo"
+                              : formData.image}
+                          </p>
+                          <p className="text-[11px] text-navy/60">
+                            {formData.image.startsWith("/uploads/")
+                              ? "Saved to public/uploads/products"
+                              : "Active product photo"}
+                          </p>
+                          <div className="flex items-center gap-3 pt-1">
+                            <label className="text-[11px] font-bold text-brandOrange hover:underline cursor-pointer flex items-center gap-1">
+                              <Camera className="w-3 h-3" />
+                              <span>Replace</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  if (f) handleModalImageUpload(f);
+                                }}
+                              />
+                            </label>
+                            <span className="text-navy/30">•</span>
+                            <button
+                              type="button"
+                              onClick={() => setFormData({ ...formData, image: "" })}
+                              className="text-[11px] font-bold text-rose-600 hover:underline flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Remove</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <label
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsDragOver(true);
+                        }}
+                        onDragLeave={() => setIsDragOver(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDragOver(false);
+                          const f = e.dataTransfer.files?.[0];
+                          if (f) handleModalImageUpload(f);
+                        }}
+                        className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all ${
+                          isDragOver
+                            ? "border-brandOrange bg-brandOrange/10 scale-[1.01]"
+                            : "border-ocean/30 bg-white hover:border-brandOrange hover:bg-sand-light/40"
                         }`}
                       >
-                        {img.name}
-                      </button>
-                    ))}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) handleModalImageUpload(f);
+                          }}
+                        />
+                        {uploadingImage ? (
+                          <div className="py-2 flex flex-col items-center gap-2">
+                            <Loader2 className="w-8 h-8 text-brandOrange animate-spin" />
+                            <p className="text-xs font-bold text-navy">Uploading product image...</p>
+                            <p className="text-[11px] text-navy/60">Saving to /public/uploads/products</p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="w-12 h-12 rounded-2xl bg-brandOrange/10 text-brandOrange flex items-center justify-center shadow-xs">
+                              <UploadCloud className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-navy">
+                                Click to browse or drag & drop image
+                              </p>
+                              <p className="text-[11px] text-navy/60 mt-0.5">
+                                JPG, PNG, WEBP, AVIF or GIF (up to 10MB)
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </label>
+                    )}
                   </div>
-                </div>
+                )}
+
+                {/* TAB 2: IMAGE URL */}
+                {imageSourceTab === "url" && (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={formData.image}
+                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                        placeholder="https://images.unsplash.com/..."
+                        className="flex-grow text-xs px-3.5 py-2.5 rounded-xl border border-sand-dark bg-white focus:outline-none focus:border-brandOrange"
+                      />
+                      {formData.image && (
+                        <div className="relative w-11 h-11 rounded-xl overflow-hidden border border-sand-dark shrink-0">
+                          <Image
+                            src={formData.image}
+                            alt="Preview"
+                            fill
+                            className="object-cover"
+                            unoptimized={formData.image?.startsWith("data:")}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-navy/60">
+                      Paste a direct image URL from Unsplash, Cloudinary, or an external server.
+                    </p>
+                  </div>
+                )}
+
+                {/* TAB 3: COASTAL PRESETS */}
+                {imageSourceTab === "presets" && (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
+                      {PRESET_IMAGES.map((img) => (
+                        <button
+                          key={img.name}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, image: img.url })}
+                          className={`group relative aspect-video rounded-xl overflow-hidden border text-left transition-all ${
+                            formData.image === img.url
+                              ? "ring-2 ring-brandOrange border-brandOrange shadow-sm"
+                              : "border-sand-dark hover:border-ocean opacity-80 hover:opacity-100"
+                          }`}
+                        >
+                          <Image
+                            src={img.url}
+                            alt={img.name}
+                            fill
+                            className="object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/30 to-transparent p-1.5 flex items-end">
+                            <span className="text-[10px] font-bold text-white leading-tight">
+                              {img.name}
+                            </span>
+                          </div>
+                          {formData.image === img.url && (
+                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-brandOrange text-white flex items-center justify-center">
+                              <Check className="w-2.5 h-2.5" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Descriptions */}

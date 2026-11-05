@@ -83,6 +83,7 @@ export default function ProductModal({ product, onClose }) {
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover"
+                unoptimized={product.image?.startsWith("data:")}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent md:hidden" />
               {product.badge && (

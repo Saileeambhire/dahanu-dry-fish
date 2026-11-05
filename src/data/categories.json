@@ -2,27 +2,37 @@
   {
     "id": "all",
     "name": "All Products",
-    "nameMr": "सर्व उत्पादने"
+    "nameMr": "सर्व उत्पादने",
+    "icon": null
   },
   {
     "id": "bombil",
     "name": "Bombil (Bombay Duck)",
-    "nameMr": "सुका बोंबील"
+    "nameMr": "सुका बोंबील",
+    "icon": null
   },
   {
     "id": "prawns",
     "name": "Prawns & Kolambi",
-    "nameMr": "सुकट आणि कोळंबी"
+    "nameMr": "सुकट आणि कोळंबी",
+    "icon": null
   },
   {
     "id": "premium",
     "name": "Surmai & Premium Cuts",
-    "nameMr": "सुरमई आणि प्रीमियम कट्स"
+    "nameMr": "सुरमई आणि प्रीमियम कट्स",
+    "icon": null
   },
   {
     "id": "daily",
     "name": "Bangda & Mandeli",
-    "nameMr": "बांगडा आणि मांदेली"
+    "nameMr": "बांगडा आणि मांदेली",
+    "icon": null
+  },
+  {
+    "id": "test",
+    "name": "Test",
+    "nameMr": "Test",
+    "icon": null
   }
 ]
-

@@ -122,11 +122,6 @@ export default function Footer() {
                   Contact & Ordering FAQ
                 </Link>
               </li>
-              <li className="pt-1.5 border-t border-ocean/30">
-                <Link href="/admin" className="text-sand/60 hover:text-brandOrange text-xs flex items-center gap-1.5 transition-colors">
-                  <span>⚙️ Dashboard (Change Prices)</span>
-                </Link>
-              </li>
             </ul>
           </div>
 
